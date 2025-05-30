@@ -1,0 +1,43 @@
+
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: delivery-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: delivery-service
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - delivery-network
+
+  api:
+    build: .
+    container_name: delivery-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/delivery-service
+      - JWT_SECRET=your-super-secret-jwt-key-here
+      - JWT_EXPIRES_IN=7d
+      - API_KEY_SECRET=your-api-key-secret-here
+    depends_on:
+      - mongodb
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - delivery-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  delivery-network:
+    driver: bridge
